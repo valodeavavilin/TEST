@@ -1,0 +1,100 @@
+<?xml version="1.0"?>
+<project name="NumberGenerator-ANT" default="build-app" basedir="." >
+ 	<property name="src.dir" value="${basedir}/src" />
+ 	<property name="test.dir" value="${basedir}/src" />
+ 	<property name="build-classes.dir" value="${basedir}/build/classes" />
+ 	<property name="build-tests.dir" value="${basedir}/build/tests" />
+ 	<property name="pack-app.dir" value="${basedir}/build/pack" />
+ 	<property name="lib.path" value="${basedir}/lib" />	
+	
+	<property environment="env"/>
+	<!-- property name="java.home" location="${env.JAVA_HOME}"/ -->
+	
+ 	<target name="test">	
+ 		<echo> ## ANT Calling Test! JAVA_HOME is set to = ${env.JAVA_HOME} </echo>
+		<echo> ## ANT Calling Test! JAVA_HOME is set to = ${env.USER} </echo>
+		<echo> ## ANT Calling Test! JAVA_HOME is set to = ${env.PATH} </echo>
+ 		<!-- echo message="ANT Calling Test! JAVA_HOME is set to = ${env.JAVA_HOME}"/ -->
+ 	</target>	
+	
+	<!-- Main target point  -->
+	<target name="build-app">
+		<antcall target="runJar" />
+	</target>
+	
+	<target name="compile-app">
+		<echo> ### COMPILE-APP ### </echo>
+		<path id="buildClasspath">
+			<fileset dir="${lib.path}">
+				<include name="**/*.jar" />
+			</fileset>
+		</path>
+		<!-- Compile  -->
+		<delete dir="${basedir}/build" />
+		<mkdir dir="${basedir}/build" />
+		<mkdir dir="${basedir}/build/classes" />
+		<mkdir dir="${basedir}/build/tests" />
+		<javac srcdir="${src.dir}" destdir="${build-classes.dir}" 
+			classpathref="buildClasspath" />
+	</target>
+	
+	<target name="compile-tests" depends="compile-app">
+		<echo> ### COMPILE TESTS ### </echo>
+		<path id="buildTestsClasspath">
+			<fileset dir="${lib.path}">
+				<include name="**/*.jar" />
+			</fileset>
+			<pathelement location="${build-classes.dir}" />
+		</path>
+		<!-- Compile  -->
+		<delete dir="${build-tests.dir}" />
+		<mkdir dir="${basedir}/build/tests" />
+		<javac srcdir="${test.dir}" destdir="${build-tests.dir}" optimize="off" debug="on" encoding="UTF-8">
+			<classpath refid="buildTestsClasspath" />
+		</javac>
+	</target>
+	
+	<target name="run-tests" depends="compile-tests">
+		<echo> ### RUN-TESTS ### </echo>
+		<path id="runTestsClasspath">
+			<fileset dir="${lib.path}">
+				<include name="**/*.jar" />
+			</fileset>
+			<pathelement location="${build-classes.dir}" />
+			<pathelement location="${build-tests.dir}" />
+		</path>
+		<junit>
+			<classpath refid="runTestsClasspath" />
+			<formatter type="brief" usefile="false" />
+			<test name="org.app.test.NumberGeneratorTest" />
+		</junit>
+	</target>
+
+	<target name="package" depends="run-tests">
+		<echo> ### PACKAGE ### </echo>
+		<jar destfile="${pack-app.dir}/NumberGenerator.jar" duplicate="preserve" compress="false">
+			<fileset dir="${build-classes.dir}" />
+			<zipgroupfileset dir="${lib.path}" includes="**/*.jar"/>
+			<manifest>
+				<attribute name="Main-Class" value="org.app.NumberGeneratorApp"/>
+			</manifest>
+		</jar>
+	</target>
+	
+	<target name="runJar" depends="package">
+		<echo> ### RUNJAR ### </echo>
+		<java jar="${pack-app.dir}/NumberGenerator.jar" fork="true" />
+	</target>
+	
+	<target name="runMainClass">	
+		<path id="runClasspath">
+			<fileset dir="${lib.path}">
+				<include name="**/*.jar" />
+			</fileset>
+			<pathelement location="${build-classes.dir}" />
+			<pathelement location="${build-tests.dir}" />
+		</path>		
+		<java classpathref="runClasspath" classname="org.app.NumberGeneratorApp" fork="true" />
+	</target>
+	
+</project>
